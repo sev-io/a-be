@@ -22,7 +22,7 @@ jobs:
 
     - name: Install golangci-lint
       run: |
-        go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.0
+        go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
         
     - name: Install Prisma CLI
