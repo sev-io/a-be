@@ -43,8 +43,7 @@ jobs:
     
     - name: Lint
       run: | 
-        go get -u
-        github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.0
+        go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.0
         golangci-lint run ./...
 
     # - name: Test
