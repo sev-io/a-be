@@ -1,0 +1,80 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator db {
+  provider = "go run github.com/steebchen/prisma-client-go"
+}
+
+model User {
+  id            String         @id @default(cuid()) @map("_id")
+  name          String
+  email         String         @unique
+  password      String
+  strId         String         @unique
+  description   String
+  medias        Media[]
+  followers     Follow[]       @relation("Follower")
+  following     Follow[]       @relation("Following")
+  notifications Notification[]
+  likes         Like[]
+  dislikes      Dislike[]
+  comments      Comment[]
+  subjects      String[]
+}
+
+model Media {
+  id          String   @id @default(cuid()) @map("_id")
+  name        String
+  path        String
+  description String
+  subjects    String[]
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  likes       Like[]
+  dislikes    Dislike[]
+  comments    Comment[]
+}
+
+model Follow {
+  id          String @id @default(cuid()) @map("_id")
+  follower    User   @relation("Follower", fields: [followerId], references: [id])
+  followerId  String
+  following   User   @relation("Following", fields: [followingId], references: [id])
+  followingId String
+}
+
+model Notification {
+  id        String   @id @default(cuid()) @map("_id")
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id     String @id @default(cuid()) @map("_id")
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  media  Media  @relation(fields: [mediaId], references: [id])
+  mediaId String
+}
+
+model Dislike {
+  id     String @id @default(cuid()) @map("_id")
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  media  Media  @relation(fields: [mediaId], references: [id])
+  mediaId String
+}
+
+model Comment {
+  id      String   @id @default(cuid()) @map("_id")
+  user    User     @relation(fields: [userId], references: [id])
+  userId  String
+  media   Media    @relation(fields: [mediaId], references: [id])
+  mediaId String
+  content String
+}
+
