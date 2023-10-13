@@ -19,7 +19,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error setting up database: %v", err)
 	}
-	defer client.Prisma.Disconnect()
+
+	defer func() {
+		_ = client.Prisma.Disconnect()
+	}()
 
 	minioClient, err := config.SetupMinio()
 	if err != nil {

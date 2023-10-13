@@ -230,6 +230,11 @@ func UploadHandler(client *db.PrismaClient, minioClient *minio.Client) http.Hand
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(createdMedia)
+		err = json.NewEncoder(w).Encode(createdMedia)
+
+		if err != nil {
+			http.Error(w, "Erro ao converter o vídeo para JSON", http.StatusInternalServerError)
+			return
+		}
 	}
 }
