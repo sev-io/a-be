@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"vilow-be/pkg/dto"
+	"vilow-be/pkg/middleware"
 	"vilow-be/pkg/models"
 	"vilow-be/prisma/db"
 
@@ -15,78 +17,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthContext struct {
-	UserID string
-}
-
-// func HomeHandler(client *db.PrismaClient) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		authContext, ok := r.Context().Value("authContext").(AuthContext)
-// 		if !ok {
-// 			http.Error(w, "AuthContext not found in context", http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		existingUser, err := client.User.FindUnique(
-// 			db.User.ID.Equals(authContext.UserID),
-// 		).Exec(r.Context())
-
-// 		if err != nil || existingUser == nil {
-// 			http.Error(w, "User not found", http.StatusUnauthorized)
-// 			return
-// 		}
-
-// 		// Adicione a lógica de paginação aqui
-// 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
-// 		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-
-// 		if page < 1 {
-// 			page = 1
-// 		}
-
-// 		if limit < 1 || limit > 50 {
-// 			limit = 10
-// 		}
-
-// 		skip := (page - 1) * limit
-
-// 		medias, err := client.Media.FindMany({
-// 			skip: skip,
-// 			take: limit,
-// 		}, nil
-// 		).Exec(r.Context())
-
-// 		if err != nil {
-// 			http.Error(w, "Error fetching medias", http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		// Converta as medias para JSON e retorne como resposta
-// 		jsonData, err := json.Marshal(medias)
-// 		if err != nil {
-// 			http.Error(w, "Error converting medias to JSON", http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		w.Header().Set("Content-Type", "application/json")
-// 		w.Write(jsonData)
-// 	}
-// }
-
-func ProductHandler(client *db.PrismaClient) http.HandlerFunc {
+func FeedHandler(client *db.PrismaClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authContext, ok := r.Context().Value("authContext").(AuthContext)
+		authContext, ok := r.Context().Value(middleware.AuthContextKey("authContext")).(dto.AuthContext)
 		if !ok {
 			http.Error(w, "AuthContext not found in context", http.StatusInternalServerError)
-			return
-		}
-
-		existingUser, err := client.User.FindUnique(
-			db.User.ID.Equals(authContext.UserID),
-		).Exec(r.Context())
-
-		if err != nil || existingUser == nil {
-			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
 
@@ -97,14 +32,9 @@ func ProductHandler(client *db.PrismaClient) http.HandlerFunc {
 			return
 		}
 
-		var response = struct {
-			UserName  string
-			UserEmail string
-			Videos    []db.MediaModel
-		}{
-			UserName:  existingUser.Name,
-			UserEmail: existingUser.Email,
-			Videos:    videoList,
+		var response dto.FeedResponse = dto.FeedResponse{
+			UserAuthData: authContext,
+			Medias:       videoList,
 		}
 
 		// Convertendo a struct para JSON
@@ -167,7 +97,7 @@ func UploadHandler(client *db.PrismaClient, minioClient *minio.Client) http.Hand
 		ctx := context.Background()
 		bucketName := os.Getenv("BUCKET_NAME")
 
-		authContext, ok := r.Context().Value("authContext").(AuthContext)
+		authContext, ok := r.Context().Value("authContext").(dto.AuthContext)
 		if !ok {
 			http.Error(w, "AuthContext not found in context", http.StatusInternalServerError)
 			return
