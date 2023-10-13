@@ -26,9 +26,11 @@ func SetupServer(client *db.PrismaClient, minioClient *minio.Client) http.Handle
 
 	protectedRouter := r.PathPrefix("/in").Subrouter()
 	protectedRouter.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(middleware.AuthMiddleware(next.ServeHTTP))
+		return http.HandlerFunc(middleware.AuthMiddleware(next.ServeHTTP, client))
 	})
+
 	protectedRouter.HandleFunc("/upload", handlers.UploadHandler(client, minioClient)).Methods(http.MethodPost)
+	protectedRouter.HandleFunc("/", handlers.FeedHandler(client)).Methods(http.MethodGet)
 
 	return c.Handler(r)
 }

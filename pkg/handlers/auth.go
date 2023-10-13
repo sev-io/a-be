@@ -4,22 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 	"vilow-be/pkg/dto"
 	"vilow-be/pkg/models"
+	"vilow-be/pkg/utils"
 	"vilow-be/prisma/db"
 
-	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var jwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
-
-type Claims struct {
-	UserID string `json:"userId"`
-	jwt.StandardClaims
-}
 
 func AuthHandler(client *db.PrismaClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -45,9 +37,9 @@ func AuthHandler(client *db.PrismaClient) http.HandlerFunc {
 			return
 		}
 
-		tokenString, err := GenerateToken(existingUser.ID)
+		tokenString, err := utils.GenerateToken(existingUser.ID)
 		if err != nil {
-			http.Error(w, "Error generating token", http.StatusInternalServerError)
+			http.Error(w, fmt.Errorf(`error generating token: %v`, err).Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -73,55 +65,4 @@ func AuthHandler(client *db.PrismaClient) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, string(responseBytes))
 	}
-}
-
-func VerifyToken(tokenString string, userID string) (*jwt.Token, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if token.Method != jwt.SigningMethodHS256 {
-			return nil, jwt.ErrSignatureInvalid
-		}
-		return jwtKey, nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		expTime := time.Unix(int64(claims["exp"].(float64)), 0)
-		if time.Now().UTC().After(expTime) {
-			newTokenString, err := GenerateToken(userID)
-			if err != nil {
-				return nil, err
-			}
-
-			newToken, err := jwt.Parse(newTokenString, func(token *jwt.Token) (interface{}, error) {
-				if token.Method != jwt.SigningMethodHS256 {
-					return nil, jwt.ErrSignatureInvalid
-				}
-				return jwtKey, nil
-			})
-
-			if err != nil {
-				return nil, err
-			}
-
-			return newToken, nil
-		}
-	}
-
-	return token, nil
-}
-
-func GenerateToken(userID string) (string, error) {
-	expirationTime := time.Now().Add(5 * time.Hour)
-	claims := &Claims{
-		UserID: userID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtKey)
 }
