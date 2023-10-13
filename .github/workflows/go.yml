@@ -20,6 +20,11 @@ jobs:
       with:
         go-version: '1.21.3'
 
+    - name: Install golangci-lint
+      run: |
+        go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.0
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+        
     - name: Install Prisma CLI
       run: go get github.com/steebchen/prisma-client-go
 
@@ -42,9 +47,7 @@ jobs:
       run: go fmt ./...
     
     - name: Lint
-      run: | 
-        go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.0
-        golangci-lint run ./...
+      run: golangci-lint run ./...
 
     # - name: Test
     #   run: go test -v ./...
