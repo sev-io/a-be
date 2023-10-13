@@ -7,6 +7,8 @@ import (
 	"vilow-be/pkg/handlers"
 )
 
+type AuthContextKey string
+
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -37,7 +39,9 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			UserID: userId,
 		}
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "authContext", authContext)))
+		ctx := context.WithValue(r.Context(), AuthContextKey("authContext"), authContext)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
 
