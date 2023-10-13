@@ -20,6 +20,12 @@ jobs:
       with:
         go-version: '1.21.3'
 
+    - name: Install Prisma CLI
+      run: go get github.com/prisma/prisma-client-go
+
+    - name: Generate Prisma Client
+      run: go run github.com/prisma/prisma-client-go generate
+
     - name: Cache Go modules
       uses: actions/cache@v3
       with:
