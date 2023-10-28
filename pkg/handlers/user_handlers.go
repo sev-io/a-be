@@ -84,8 +84,8 @@ func UpdateUserHandler(client *db.PrismaClient) http.HandlerFunc {
 		).Exec(r.Context())
 
 		if err != nil || existingUser == nil {
-			http.Error(w, "User not found", http.StatusNotFound)
-			log.Println("User not found")
+			http.Error(w, "User not found: "+err.Error(), http.StatusNotFound)
+			log.Println("User not found: " + err.Error())
 			return
 		}
 
@@ -130,8 +130,8 @@ func DeleteUserHandler(client *db.PrismaClient) http.HandlerFunc {
 		).Exec(r.Context())
 
 		if err != nil || existingUser == nil {
-			http.Error(w, "User not found", http.StatusNotFound)
-			log.Println("User not found")
+			http.Error(w, "User not found: "+err.Error(), http.StatusNotFound)
+			log.Println("User not found: " + err.Error())
 			return
 		}
 
@@ -166,8 +166,8 @@ func GetUserDataHandler(client *db.PrismaClient) http.HandlerFunc {
 		).Exec(r.Context())
 
 		if err != nil || existingUser == nil {
-			http.Error(w, "User not found", http.StatusNotFound)
-			log.Println("User not found")
+			http.Error(w, "User not found: "+err.Error(), http.StatusNotFound)
+			log.Println("User not found: " + err.Error())
 			return
 		}
 

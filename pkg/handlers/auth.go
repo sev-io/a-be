@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 	"vilow-be/pkg/dto"
+	"vilow-be/pkg/middleware"
 	"vilow-be/pkg/models"
 	"vilow-be/pkg/utils"
 	"vilow-be/prisma/db"
@@ -27,7 +29,7 @@ func AuthHandler(client *db.PrismaClient) http.HandlerFunc {
 		).Exec(r.Context())
 
 		if err != nil || existingUser == nil {
-			http.Error(w, "User not found", http.StatusUnauthorized)
+			http.Error(w, "User not found: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -65,4 +67,25 @@ func AuthHandler(client *db.PrismaClient) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, string(responseBytes))
 	}
+}
+
+func getMediaAndAuthContext(r *http.Request, client *db.PrismaClient, mediaID string) (dto.AuthContext, *db.MediaModel, int, error) {
+	authContext, ok := r.Context().Value(middleware.AuthContextKey("authContext")).(dto.AuthContext)
+	if !ok {
+		return dto.AuthContext{}, nil, http.StatusUnauthorized, errors.New("AuthContext not found in context")
+	}
+
+	media, err := client.Media.FindUnique(
+		db.Media.ID.Equals(mediaID),
+	).Exec(r.Context())
+
+	if err != nil {
+		return dto.AuthContext{}, nil, http.StatusUnauthorized, errors.New("media not found")
+	}
+
+	if media.UserID != authContext.UserID {
+		return dto.AuthContext{}, nil, http.StatusUnauthorized, errors.New("unauthorized: You do not have permission to manipulate this media")
+	}
+
+	return authContext, media, http.StatusOK, nil
 }

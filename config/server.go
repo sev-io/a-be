@@ -23,7 +23,6 @@ func SetupServer(client *db.PrismaClient, minioClient *minio.Client) http.Handle
 	// r.Use(middleware.CorsMiddleware)
 
 	// Public routes
-
 	// User public routes
 	r.HandleFunc("/user", handlers.CreateUserHandler(client)).Methods(http.MethodPost)
 
@@ -43,7 +42,11 @@ func SetupServer(client *db.PrismaClient, minioClient *minio.Client) http.Handle
 	protectedRouter.HandleFunc("/", handlers.FeedHandler(client)).Methods(http.MethodGet)
 
 	// Media protected routes
-	protectedRouter.HandleFunc("/upload", handlers.UploadMediaHandler(client, minioClient)).Methods(http.MethodPost)
+	protectedRouter.HandleFunc("/media/upload", handlers.UploadMediaHandler(client, minioClient)).Methods(http.MethodPost)
+	protectedRouter.HandleFunc("/media/{id}", handlers.GetMediaHandler(client)).Methods(http.MethodGet)
+	protectedRouter.HandleFunc("/media/{id}", handlers.UpdateMediaHandler(client, minioClient)).Methods(http.MethodPut)
+	protectedRouter.HandleFunc("/media/{id}", handlers.DeleteMediaHandler(client, minioClient)).Methods(http.MethodDelete)
+	protectedRouter.HandleFunc("/medias/timeline", handlers.GetMediasTimelineHandler(client)).Methods(http.MethodGet)
 
 	return c.Handler(r)
 }

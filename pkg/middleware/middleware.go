@@ -38,7 +38,7 @@ func AuthMiddleware(next http.HandlerFunc, client *db.PrismaClient) http.Handler
 		).Exec(r.Context())
 
 		if err != nil || user == nil {
-			http.Error(w, "User not found", http.StatusUnauthorized)
+			http.Error(w, "User not found: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
 
